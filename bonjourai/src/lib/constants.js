@@ -1,4 +1,5 @@
 export const DEMO_TODAY = "2026-11-02";
+export const DEMO_TODAY_LABEL = "02 Nov 2026";
 
 export const LANGUAGES = ["Hindi", "English", "Tamil", "Telugu", "Kannada", "Marathi", "Bengali"];
 

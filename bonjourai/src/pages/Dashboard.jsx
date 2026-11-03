@@ -8,12 +8,39 @@ import { BarList } from "../components/Charts";
 import { EmptyState, ErrorState, LoadingState } from "../components/AsyncState";
 import useAsyncData from "../hooks/useAsyncData";
 import { fetchDashboard } from "../services/api";
+import { DEMO_TODAY_LABEL } from "../lib/constants";
 import { formatDateTime, formatNumber } from "../lib/format";
+
+function LanguageCell({ call }) {
+  return (
+    <div className="min-w-36 space-y-1 text-xs leading-5">
+      <p><span className="text-slate-500">Preferred:</span> <span className="font-medium text-slate-900">{call.preferredLanguage}</span></p>
+      <p><span className="text-slate-500">Detected:</span> <span className="font-medium text-slate-900">{call.detectedLanguage}</span></p>
+      <p><span className="text-slate-500">Dialect:</span> <span className="text-slate-700">{call.dialect}</span></p>
+    </div>
+  );
+}
 
 const RECENT_CALL_COLUMNS = [
   { key: "borrowerId", header: "Borrower ID" },
   { key: "borrowerName", header: "Borrower name" },
-  { key: "language", header: "Language" },
+  {
+    key: "languageDetails",
+    header: "Language details",
+    wrap: true,
+    render: (call) => <LanguageCell call={call} />,
+  },
+  {
+    key: "languageSwitch",
+    header: "Language switch",
+    wrap: true,
+    render: (call) => (
+      <div className="min-w-28 space-y-1">
+        <StatusBadge status={call.languageSwitch} tone={call.languageSwitch === "Switched" ? "warning" : "neutral"} />
+        <p className="text-xs text-slate-500">Code-switching: {call.codeSwitching}</p>
+      </div>
+    ),
+  },
   {
     key: "startedAt",
     header: "Call time",
@@ -24,7 +51,13 @@ const RECENT_CALL_COLUMNS = [
     header: "Call status",
     render: (call) => <StatusBadge status={call.status} />,
   },
-  { key: "outcome", header: "Outcome" },
+  {
+    key: "outcome",
+    header: "Outcome",
+    wrap: true,
+    cellClassName: "max-w-48 whitespace-normal",
+    render: (call) => <span title={call.outcome}>{call.outcome}</span>,
+  },
 ];
 
 const KPI_CARDS = [
@@ -48,11 +81,14 @@ export default function Dashboard({ onNavigate }) {
     );
   }
 
+  const connectedRate = data ? `${formatNumber(data.stats.connected)} of ${formatNumber(data.stats.callsAttempted)} attempted` : "Demo data";
+  const languageRows = data?.recentCalls ?? [];
+
   return (
     <>
       <PageHeader
         title="Overview"
-        description="Today's repayment reminder activity across all campaigns."
+        description={`Today's repayment reminder activity · Demo date: ${DEMO_TODAY_LABEL}`}
       />
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Key figures">
@@ -61,7 +97,7 @@ export default function Dashboard({ onNavigate }) {
             key={card.key}
             label={card.label}
             value={data ? formatNumber(data.stats[card.key]) : "--"}
-            helper="Demo data"
+            helper={card.key === "connected" ? connectedRate : "Demo data"}
             icon={<Icon name={card.icon} className="h-4 w-4 text-slate-400" />}
           />
         ))}
@@ -71,12 +107,12 @@ export default function Dashboard({ onNavigate }) {
         <Panel
           className="xl:col-span-2"
           title="Recent call activity"
-          description="Latest automated reminder calls"
+          description="Latest automated reminder calls · language details are synthetic demo attributes"
           action={
             <button
               type="button"
               onClick={() => onNavigate("call-history")}
-              className="text-sm font-medium text-blue-700 transition-colors hover:text-blue-800"
+              className="text-left text-sm font-medium text-blue-700 transition-colors hover:text-blue-800"
             >
               View call history
             </button>
@@ -110,8 +146,57 @@ export default function Dashboard({ onNavigate }) {
 
         <Panel
           className="xl:col-span-2"
+          title="Language & dialect visibility"
+          description="Preferred language, detected language and supported confidence labels"
+        >
+          {loading ? (
+            <LoadingState rows={3} />
+          ) : languageRows.length === 0 ? (
+            <EmptyState title="No language data yet" description="Language details will appear with call activity." />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-left text-xs font-medium text-slate-500">
+                    <th className="pb-2 pr-4">Borrower</th>
+                    <th className="pb-2 pr-4">Preferred</th>
+                    <th className="pb-2 pr-4">Detected</th>
+                    <th className="pb-2 pr-4">Dialect</th>
+                    <th className="pb-2">Switching</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {languageRows.slice(0, 5).map((call) => (
+                    <tr key={`language-${call.id}`}>
+                      <td className="py-3 pr-4">
+                        <p className="font-medium text-slate-900">{call.borrowerName}</p>
+                        <p className="text-xs text-slate-500">{call.borrowerId}</p>
+                      </td>
+                      <td className="py-3 pr-4 text-slate-700">{call.preferredLanguage}</td>
+                      <td className="py-3 pr-4 text-slate-700">{call.detectedLanguage}</td>
+                      <td className="py-3 pr-4 text-xs text-slate-600">{call.dialect}</td>
+                      <td className="py-3"><StatusBadge status={call.languageSwitch} tone={call.languageSwitch === "Switched" ? "warning" : "neutral"} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Panel>
+
+        <Panel
+          className="xl:col-span-3"
           title="Pending follow-ups"
           description="Callbacks and human follow-ups waiting for action"
+          action={
+            <button
+              type="button"
+              onClick={() => onNavigate("call-history")}
+              className="text-left text-sm font-medium text-blue-700 transition-colors hover:text-blue-800"
+            >
+              View all
+            </button>
+          }
         >
           {loading ? (
             <LoadingState rows={3} />
@@ -127,7 +212,7 @@ export default function Dashboard({ onNavigate }) {
                       <span className="ml-2 text-xs font-normal text-slate-500">{call.borrowerId}</span>
                     </p>
                     <p className="text-xs text-slate-500">
-                      {call.outcome} · {call.language} · {formatDateTime(call.startedAt)}
+                      {call.outcome} · {call.preferredLanguage} preferred · {formatDateTime(call.startedAt)}
                     </p>
                   </div>
                   <StatusBadge status={call.followUpStatus} />

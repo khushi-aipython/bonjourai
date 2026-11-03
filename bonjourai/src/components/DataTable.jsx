@@ -15,7 +15,7 @@ export default function DataTable({
   if (error) return <ErrorState onRetry={onRetry} />;
 
   return (
-    <div className="overflow-x-auto">
+    <div className="data-table-scroll overflow-x-auto">
       <table className="min-w-full divide-y divide-slate-200 text-sm">
         <thead className="bg-slate-50">
           <tr>
@@ -55,7 +55,7 @@ export default function DataTable({
               {columns.map((column) => (
                 <td
                   key={column.key}
-                  className={`whitespace-nowrap px-4 py-3 align-middle text-slate-700 ${column.cellClassName ?? ""}`}
+                  className={`${column.wrap ? "whitespace-normal" : "whitespace-nowrap"} px-4 py-3 align-middle text-slate-700 ${column.cellClassName ?? ""}`}
                 >
                   {column.render ? column.render(row) : row[column.key]}
                 </td>

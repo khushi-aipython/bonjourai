@@ -1,1 +1,22 @@
 @import "tailwindcss";
+
+html {
+  min-width: 320px;
+}
+
+body {
+  min-width: 320px;
+  overflow-x: hidden;
+}
+
+@media (max-width: 640px) {
+  .data-table-scroll {
+    margin-inline: -1.25rem;
+    padding-inline: 1.25rem;
+    scrollbar-width: thin;
+  }
+
+  .data-table-scroll table {
+    min-width: 760px;
+  }
+}

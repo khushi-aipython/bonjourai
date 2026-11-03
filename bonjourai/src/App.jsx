@@ -44,7 +44,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <Sidebar activeKey={pageKey} onNavigate={navigate} open={navOpen} onClose={() => setNavOpen(false)} />
 
-      <div className="lg:pl-60">
+      <div className="md:pl-60">
         <Topbar
           breadcrumb={pageLabel}
           search={search}

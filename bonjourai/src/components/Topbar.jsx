@@ -21,7 +21,7 @@ export default function Topbar({ breadcrumb, search, onSearchChange, onSearchSub
         type="button"
         onClick={onMenuClick}
         aria-label="Open navigation"
-        className="rounded-md p-2 text-slate-600 transition-colors hover:bg-slate-100 lg:hidden"
+        className="rounded-md p-2 text-slate-600 transition-colors hover:bg-slate-100 md:hidden"
       >
         <Icon name="menu" />
       </button>
